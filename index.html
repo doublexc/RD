@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting...</title>
+    <script>
+        async function doRedirect() {
+            // 1. ดึง ID จาก URL (เช่น ?id=x1)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('id');
+
+            // 2. ใส่ลิงก์ CSV จาก Google Sheets ที่คุณทำไว้
+            const sheetUrl = 'ลิงก์_CSV_ของคุณ_ที่นี่';
+
+            if (targetId) {
+                const response = await fetch(sheetUrl);
+                const data = await response.text();
+                
+                // 3. ค้นหา URL ที่ตรงกับ ID
+                const rows = data.split('\n');
+                for (let i = 1; i < rows.length; i++) {
+                    const [id, url] = rows[i].split(',');
+                    if (id.trim() === targetId) {
+                        window.location.href = url.trim();
+                        return;
+                    }
+                }
+                alert('ไม่พบลิงก์ที่ต้องการ');
+            }
+        }
+        window.onload = doRedirect;
+    </script>
+</head>
+<body>
+    <p>กำลังพาท่านไปยังจุดหมาย...</p>
+</body>
+</html>
