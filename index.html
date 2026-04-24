@@ -9,7 +9,7 @@
             const targetId = urlParams.get('id');
 
             // 2. ใส่ลิงก์ CSV จาก Google Sheets ที่คุณทำไว้
-            const sheetUrl = 'ลิงก์_CSV_ของคุณ_ที่นี่';
+            const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv';
 
             if (targetId) {
                 const response = await fetch(sheetUrl);
