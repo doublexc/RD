@@ -1,36 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Redirecting...</title>
-    <script>
-        async function doRedirect() {
-            // 1. ดึง ID จาก URL (เช่น ?id=x1)
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetId = urlParams.get('id');
+<script>
+    (async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (!id) return;
 
-            // 2. ใส่ลิงก์ CSV จาก Google Sheets ที่คุณทำไว้
-            const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv';
+        try {
+            // ดึงข้อมูลจาก Google Sheets (ใส่ URL CSV ของคุณ)
+            const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv');
+            const data = await response.text();
+            const rows = data.split('\n');
 
-            if (targetId) {
-                const response = await fetch(sheetUrl);
-                const data = await response.text();
-                
-                // 3. ค้นหา URL ที่ตรงกับ ID
-                const rows = data.split('\n');
-                for (let i = 1; i < rows.length; i++) {
-                    const [id, url] = rows[i].split(',');
-                    if (id.trim() === targetId) {
-                        window.location.href = url.trim();
-                        return;
-                    }
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(',');
+                if (cols[0] && cols[0].trim() === id.trim()) {
+                    // ใช้ replace เพื่อข้ามหน้า history และทำงานทันที
+                    window.location.replace(cols[1].trim());
+                    return;
                 }
-                alert('ไม่พบลิงก์ที่ต้องการ');
             }
+        } catch (e) {
+            console.error(e);
         }
-        window.onload = doRedirect;
-    </script>
-</head>
-<body>
-    <p>กำลังพาท่านไปยังจุดหมาย...</p>
-</body>
-</html>
+    })(); // ( ) ตอนท้ายคือให้ฟังก์ชันทำงานทันทีไม่ต้องรอ window.onload
+</script>
