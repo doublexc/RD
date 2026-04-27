@@ -5,71 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            padding-top: 100px;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f4f9; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="loader"></div>
-    <h2>กำลังพาท่านไปยังจุดหมาย...</h2>
+    <h2 id="msg">กำลังพาท่านไปยังจุดหมาย...</h2>
     <p>ตรวจสอบท้ายลิ้งค์ต้องเป็น ?id=name</p>
 
-    (async function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    if (!id) return;
-
-    let extraParams = "";
-    urlParams.forEach((value, key) => {
-        if (key !== 'id') {
-            extraParams += `&${key}=${value}`;
-        }
-    });
-
-    try {
-        // ใส่ลิงก์ Google Sheets CSV ของคุณตรงนี้
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv';
-        
-        const response = await fetch(sheetUrl);
-        const data = await response.text();
-        const rows = data.split('\n');
-
-        for (let i = 1; i < rows.length; i++) {
-            const cols = rows[i].split(',');
-            if (cols[0] && cols[0].trim() === id.trim()) {
-                let targetUrl = cols[1].trim();
-
-                // เช็คว่าลิงก์ปลายทางมี ? หรือยัง
-                const separator = targetUrl.includes('?') ? '&' : '?';
-                
-                // รวมร่างลิงก์ปลายทาง กับ Parameter ที่ส่งมาเพิ่ม (เช่น gift=123456)
-                const finalUrl = extraParams ? `${targetUrl}${separator}${extraParams.substring(1)}` : targetUrl;
-
-                window.location.replace(finalUrl);
+    <script>
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            if (!id) {
+                document.getElementById('msg').innerText = "กรุณาระบุ ?id=... ที่ท้ายลิงก์";
                 return;
             }
-        }
-    } catch (e) { console.error(e); }
-})();
+
+            // เก็บค่าตัวแปรอื่นๆ (เช่น code, gift)
+            let extraParams = "";
+            urlParams.forEach((value, key) => {
+                if (key !== 'id') {
+                    extraParams += `&${key}=${encodeURIComponent(value)}`;
+                }
+            });
+
+            try {
+                const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv';
+                const response = await fetch(sheetUrl);
+                const data = await response.text();
+                const rows = data.split('\n');
+
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i].split(',');
+                    if (cols[0] && cols[0].trim() === id.trim()) {
+                        let targetUrl = cols[1].trim();
+                        const separator = targetUrl.includes('?') ? '&' : '?';
+                        
+                        // รวมร่าง URL ปลายทาง + Parameter ที่เหลือ
+                        const finalUrl = extraParams ? `${targetUrl}${separator}${extraParams.substring(1)}` : targetUrl;
+
+                        window.location.replace(finalUrl);
+                        return;
+                    }
+                }
+                document.getElementById('msg').innerText = "ไม่พบ ID นี้ในระบบ";
+            } catch (e) {
+                console.error(e);
+                document.getElementById('msg').innerText = "เกิดข้อผิดพลาดในการดึงข้อมูล";
+            }
         })();
     </script>
 </body>
