@@ -17,48 +17,50 @@
     <p>ตรวจสอบท้ายลิ้งค์ต้องเป็น ?id=name</p>
 
     <script>
-        (async function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            
-            if (!id) {
-                document.getElementById('msg').innerText = "กรุณาระบุ ?id=... ที่ท้ายลิงก์";
-                return;
+    (async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        
+        if (!id) {
+            document.getElementById('msg').innerText = "กรุณาระบุ ?id=... ที่ท้ายลิงก์";
+            return;
+        }
+
+        
+        const encodedUrl = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvZS8yUEFDWC0xdlFrVG9yMkJHQjVyVjlpNGZQak9LdTM5b2N1XzdlX2ZGWElMYldGUkp1eFllYXM0YnNJSFpBSUdxb015UjZ2TGpmMkVpN2RRaG5NSFl1Ui9wdWI/Z2lkPTQ2MTU1NjkwNSZzaW5nbGU9dHJ1ZSZvdXRwdXQ9Y3N2...'; 
+        const sheetUrl = atob(encodedUrl); 
+        // ---------------------------
+
+        let extraParams = "";
+        urlParams.forEach((value, key) => {
+            if (key !== 'id') {
+                extraParams += `&${key}=${encodeURIComponent(value)}`;
             }
+        });
 
-            // เก็บค่าตัวแปรอื่นๆ (เช่น code, gift)
-            let extraParams = "";
-            urlParams.forEach((value, key) => {
-                if (key !== 'id') {
-                    extraParams += `&${key}=${encodeURIComponent(value)}`;
+        try {
+            const response = await fetch(sheetUrl);
+            const data = await response.text();
+            const rows = data.split('\n');
+
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(',');
+                if (cols[0] && cols[0].trim() === id.trim()) {
+                    let targetUrl = cols[1].trim();
+                    const separator = targetUrl.includes('?') ? '&' : '?';
+                    const finalUrl = extraParams ? `${targetUrl}${separator}${extraParams.substring(1)}` : targetUrl;
+
+                    window.location.replace(finalUrl);
+                    return;
                 }
-            });
-
-            try {
-                const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkTor2BGB5rV9i4fPjOKu39ocu_7e_fFXILbWFRJuxYeas4bsIHZAIGqoMyR6vLjf2Ei7dQhnMHYuR/pub?gid=461556905&single=true&output=csv';
-                const response = await fetch(sheetUrl);
-                const data = await response.text();
-                const rows = data.split('\n');
-
-                for (let i = 1; i < rows.length; i++) {
-                    const cols = rows[i].split(',');
-                    if (cols[0] && cols[0].trim() === id.trim()) {
-                        let targetUrl = cols[1].trim();
-                        const separator = targetUrl.includes('?') ? '&' : '?';
-                        
-                        // รวมร่าง URL ปลายทาง + Parameter ที่เหลือ
-                        const finalUrl = extraParams ? `${targetUrl}${separator}${extraParams.substring(1)}` : targetUrl;
-
-                        window.location.replace(finalUrl);
-                        return;
-                    }
-                }
-                document.getElementById('msg').innerText = "ไม่พบ ID นี้ในระบบ";
-            } catch (e) {
-                console.error(e);
-                document.getElementById('msg').innerText = "เกิดข้อผิดพลาดในการดึงข้อมูล";
             }
-        })();
-    </script>
+            document.getElementById('msg').innerText = "ไม่พบ ID นี้ในระบบ";
+        } catch (e) {
+            console.error(e);
+            document.getElementById('msg').innerText = "เกิดข้อผิดพลาดในการดึงข้อมูล";
+        }
+    })();
+</script>
+
 </body>
 </html>
